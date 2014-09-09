@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+	<meta charset="UTF-8">
+	<title>Square</title>
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+
+	<style>
+		#container{
+			width:auto;
+			margin:0px auto;
+		}
+
+		.square{
+			width: 40px;
+			height: 40px;
+			margin-right:2px;
+			margin-bottom:2px;
+			border:1px solid #999;
+			float:left;
+		}
+		.clear{
+			clear:both;
+		}
+		#blockGame{
+			margin:0 25% 0 25%;
+		}
+		#loading{
+			display:none;
+		}
+
+	</style>
+
+
+	<script>
+		"use strict";
+
+		$(document).ready(function(){
+
+			var game = start();
+
+
+			$('#start').click(game.init);
+			$('.square').click(game.next);
+
+		});
+
+		function start() {
+
+			// Настройки игры
+			var settings = {
+				game: null,
+				field: null
+			};
+
+			// статус игрв
+			var status = {
+				allStep: []
+			};
+
+
+			var game = {
+
+				init : function () {
+
+					settings.game = $('#game option:selected').val();
+					settings.field = $('#field option:selected').val();
+
+					$('#settings').css({'display': 'none'});
+
+					for (var i = 1, len = settings.field * settings.field; i <= len; i++) {
+						$('#container #blockGame').append('<div class="square" id="' + i + '"></div>');
+						$('#' + i).bind({ click: game.next });
+						if (!(i % settings.field))
+							$('#container #blockGame').append('<div class="clear"></div>');
+					}
+
+					status.allStep.push(1 + Math.random() * (settings.field * settings.field - 1) ^ 0);
+
+					$('#' + status.allStep[0]).css({'backgroundColor': 'red'});
+				},
+
+				next : function (){
+					var lastStep = $(this).attr('id');
+
+					if (status.allStep[status.allStep.length - 1] === +lastStep){
+
+						game.intervalLoading();
+
+						game.intervalLoading.timer = setInterval(game.intervalLoading , 200);
+
+						setTimeout(function(){
+
+							while(true){
+								var n = 1 + Math.random() * (settings.field * settings.field - 1) ^ 0
+								if(~status.allStep.indexOf(n))
+									continue;
+
+								status.allStep.push(n);
+								break;
+							}
+
+							for(var i = 0, len = status.allStep.length; i < len; i++){
+								$('#' + status.allStep[i]).css({'backgroundColor': 'red'});
+							}
+
+							var res = status.allStep.length;
+
+							$('.res').text('Счет : ' + (res - 1));
+						} , 1200);
+
+
+
+					}else{
+
+						$('#' + status.allStep[status.allStep.length - 1]).css({'backgroundColor': 'yellow'});
+
+						if( !('error' in status)) status.error = 1
+						else status.error++;
+
+						$('.error').text('Ошибки : ' + status.error);
+
+					}
+
+				},
+
+				intervalLoading : function(){
+
+					if(game.intervalLoading.count === undefined){
+						game.intervalLoading.count = 0;
+					}
+
+					var randomField = function(){
+
+						var n, arr = [];
+
+						n = 1 + Math.random() * (settings.field * settings.field - 1) / 2 ^ 0;
+
+						for(var i = 0, x; i < n ; i++){
+							x = 1 + Math.random() * (settings.field * settings.field - 1) ^ 0;
+							if(~arr.indexOf(x)){
+								i-- ;
+								continue
+							}
+
+							arr.push(x);
+						}
+
+						for(var i = 0, len = arr.length - 1; i < len ; i++){
+							$('#' + arr[i]).css({'backgroundColor' : 'red'});
+						}
+
+					};
+
+					var clearField = function(){
+						$('.square').each(function(){
+							$(this).css({'backgroundColor' : '#fff'});
+						});
+					};
+
+					randomField();
+
+					setTimeout(clearField, 100);
+
+					game.intervalLoading.count++;
+
+					setTimeout(function(){
+						clearInterval(game.intervalLoading.timer) ;
+						delete game.intervalLoading.timer && delete game.intervalLoading.count
+					} , 1000);
+
+				}
+
+			};
+
+
+			return game;
+		}
+
+	</script>
+</head>
+<body>
+	<div id="container">
+		<div id="settings">
+
+			<h1>Вобор и настройка игры</h1>
+
+			<select id="game">
+				<!--<option value="replay">Повторить</option>-->
+				<option value="new">Указать новый</option>
+			</select>
+
+			<select id="field">
+				<option value="5">5 X 5</option>
+				<option value="6">6 X 6</option>
+				<option value="7">7 X 7</option>
+				<option value="8">8 X 8</option>
+				<option value="9">9 X 9</option>
+				<option value="10">10 X 10</option>
+			</select>
+			<button id="start">Начать игру</button>
+		</div>
+		<div id="blockGame">
+			<p><span class="res"></span> &nbsp; <span class="error"></span></p>
+
+		</div>
+		<div id="loading">
+			<h1>Загрузка</h1>
+		</div>
+	</div>
+</body>
+</html>
