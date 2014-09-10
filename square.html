@@ -53,9 +53,9 @@
 			// Настройки игры
 			var settings = {
 				// Тип игры
-				game: $('#game option:selected').val(),
+				game : $('#game option:selected').val(),
 				// Колличество квадратов в игре
-				field: +$('#field option:selected').val()
+				field : +$('#field option:selected').val()
 			};
 
 			// статус игрв
@@ -78,6 +78,12 @@
 				// инициализация игры
 				init : function () {
 
+					// проверяем настройки игры  игры
+					if(settings.game !== $('#game option:selected').val())
+						settings.game = $('#game option:selected').val();
+					if(settings.field !== +$('#field option:selected').val())
+						settings.field = +$('#field option:selected').val();
+
 					// Убираем со страницы настройки игры
 					$('#settings').css({'display': 'none'});
 
@@ -88,6 +94,8 @@
 						if (!(i % settings.field))
 							$('#container #blockGame').append('<div class="clear"></div>');
 					}
+
+					console.log()
 
 					// Первый ход
 					// Генерируем число в диапазоне игравого поля
