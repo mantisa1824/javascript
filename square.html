@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html>
 <head lang="en">
@@ -8,7 +10,7 @@
 	<style>
 		#container{
 			width:auto;
-			margin:0px auto;
+			margin:0 auto;
 		}
 
 		.square{
@@ -33,6 +35,7 @@
 
 
 	<script>
+
 		"use strict";
 
 		$(document).ready(function(){
@@ -49,25 +52,36 @@
 
 			// Настройки игры
 			var settings = {
-				game: null,
-				field: null
+				// Тип игры
+				game: $('#game option:selected').val(),
+				// Колличество квадратов в игре
+				field: +$('#field option:selected').val()
 			};
 
 			// статус игрв
 			var status = {
-				allStep: []
+				// Массив предыдущих шагов
+				allStep: [],
+				// Массив оставшихся шагов
+				nextStep: []
 			};
+
+			// Заполняем массив с ходами , будем извлекать их каждый шаг
+			// Количество элементов равняется полю игры
+			for(var i = 1, end = settings.field * settings.field ; i <= end ; i++){
+				status.nextStep[status.nextStep.length] = i;
+			}
 
 
 			var game = {
 
+				// инициализация игры
 				init : function () {
 
-					settings.game = $('#game option:selected').val();
-					settings.field = $('#field option:selected').val();
-
+					// Убираем со страницы настройки игры
 					$('#settings').css({'display': 'none'});
 
+					// Отрисосвываем игровое поле
 					for (var i = 1, len = settings.field * settings.field; i <= len; i++) {
 						$('#container #blockGame').append('<div class="square" id="' + i + '"></div>');
 						$('#' + i).bind({ click: game.next });
@@ -75,48 +89,67 @@
 							$('#container #blockGame').append('<div class="clear"></div>');
 					}
 
-					status.allStep.push(1 + Math.random() * (settings.field * settings.field - 1) ^ 0);
+					// Первый ход
+					// Генерируем число в диапазоне игравого поля
+					// Извлекаем это число в другой массив (массив совершенных ходов)
+					status.allStep.push( +status.nextStep.splice( Math.random() * end  ^ 0 , 1 ) );
 
+					// Отрисовывае первый квадрат на поле
 					$('#' + status.allStep[0]).css({'backgroundColor': 'red'});
+
 				},
 
 				next : function (){
-					var lastStep = $(this).attr('id');
 
-					if (status.allStep[status.allStep.length - 1] === +lastStep){
+					// Получаем квадрат на котором был совершен клик
+					var lastStep = +$(this).attr('id');
 
+					// Проверяем что бы клик был совершен по закрашеному квадрату
+					// Если нет то завершаем скрипт
+					//if($(this).css({'backgroundColor':'#fff'})) return;
+
+					// Проверяем последнее число из массива прошедших ходов , если это он то указан новый квадрат на поле
+					if(status.allStep[status.allStep.length - 1] === lastStep){
+
+						// Загрузка нового хода
 						game.intervalLoading();
 
+						// Каждые 200 мс запускаем генерацию случайного порядка квадратов , что бы сбить с толку )
 						game.intervalLoading.timer = setInterval(game.intervalLoading , 200);
 
+						// Загрузка следующего хода 1200 мс
 						setTimeout(function(){
 
-							while(true){
-								var n = 1 + Math.random() * (settings.field * settings.field - 1) ^ 0
-								if(~status.allStep.indexOf(n))
-									continue;
+							// Следующий ход
+							// Генерируем число в диапазоне игравого поля
+							// Извлекаем это число в другой массив (массив совершенных ходов)
+							status.allStep.push( +status.nextStep.splice( Math.random() * status.nextStep.length ^  0 , 1 ) );
 
-								status.allStep.push(n);
-								break;
-							}
-
+							// Отрисовываем все квадраты которые уже есть на поле
 							for(var i = 0, len = status.allStep.length; i < len; i++){
 								$('#' + status.allStep[i]).css({'backgroundColor': 'red'});
 							}
 
-							var res = status.allStep.length;
+							// Воводим счет на страницу
+							$('.res').text('Счет : ' + (status.allStep.length - 1));
 
-							$('.res').text('Счет : ' + (res - 1));
 						} , 1200);
 
 
 
 					}else{
 
+						// Если клик был совершен на неправильный квадрат
+
+						// Правильный отрисовываем желтым
 						$('#' + status.allStep[status.allStep.length - 1]).css({'backgroundColor': 'yellow'});
 
-						if( !('error' in status)) status.error = 1
-						else status.error++;
+						// Отрисовывем на странице колличество ошибок
+						if( !('error' in status) ) {
+							status.error = 1;
+						} else {
+							status.error++;
+						}
 
 						$('.error').text('Ошибки : ' + status.error);
 
@@ -124,18 +157,18 @@
 
 				},
 
+				// Загрузка следующего хода
 				intervalLoading : function(){
 
-					if(game.intervalLoading.count === undefined){
-						game.intervalLoading.count = 0;
-					}
-
+					// Отрисовка квадратов между ходами
 					var randomField = function(){
 
 						var n, arr = [];
 
+						// Определяем сколько квадратов будет заполненно на поле
 						n = 1 + Math.random() * (settings.field * settings.field - 1) / 2 ^ 0;
 
+						// Создаем массив с числами что бы заполнить хаотично поле
 						for(var i = 0, x; i < n ; i++){
 							x = 1 + Math.random() * (settings.field * settings.field - 1) ^ 0;
 							if(~arr.indexOf(x)){
@@ -146,11 +179,13 @@
 							arr.push(x);
 						}
 
+						// Отрисовываем квадраты
 						for(var i = 0, len = arr.length - 1; i < len ; i++){
 							$('#' + arr[i]).css({'backgroundColor' : 'red'});
 						}
 
 					};
+
 
 					var clearField = function(){
 						$('.square').each(function(){
@@ -158,22 +193,23 @@
 						});
 					};
 
+					// Хаотичначная отрисовкка квадратов
 					randomField();
 
+					// Сразу очищаем квадраты , создается эффект мелькания
 					setTimeout(clearField, 100);
 
-					game.intervalLoading.count++;
-
+					// Останавливаем таймер для загрузки нового хода
 					setTimeout(function(){
 						clearInterval(game.intervalLoading.timer) ;
-						delete game.intervalLoading.timer && delete game.intervalLoading.count
+						delete game.intervalLoading.timer
 					} , 1000);
 
 				}
 
 			};
 
-
+			// Возврат объекта
 			return game;
 		}
 
